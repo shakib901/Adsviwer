@@ -325,7 +325,7 @@ input:checked + .slider:before {
     <div class="footer-credit">Developed By SAKIB HOSSAIN</div>
 </div>
 
-<a href="https://t.me/bestearningmethod" target="_blank" class="telegram-bubble">
+<a href="https://t.me-bestearningmethod" target="_blank" class="telegram-bubble">
     <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram">
 </a>
 
@@ -339,8 +339,8 @@ input:checked + .slider:before {
     </div>
 </div>
 
-<!-- Monetag SDK -->
-<script src='//libtl.com/sdk.js' data-zone='10406149' data-sdk='show_10406149'></script>
+<!-- Monetag SDK (Your Zone ID) -->
+<script src='//libtl.com/sdk.js' data-zone='10531747' data-sdk='show_10531747'></script>
 
 <script>
 let normalAdsCount = parseInt(localStorage.getItem('normalAdsCount')) || 0;
@@ -351,7 +351,7 @@ let monetagLoaded = false;
 const AD_LIMIT = 60;
 const CIRCUMFERENCE = 452; // 2 * π * 72
 
-const AD_FUNCTION_NAME = 'show_10406149';
+const AD_FUNCTION_NAME = 'show_10531747';
 
 // Initialize
 document.getElementById('watched-ads').textContent = normalAdsCount;
@@ -436,7 +436,7 @@ autoSwitch.addEventListener('change', () => {
     }
 });
 
-// Normal Watch Ad
+// Normal Watch Ad (Interstitial)
 document.getElementById('watch-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
     if(!checkNormalLimit()){ showLimitModal('normal'); return; }
