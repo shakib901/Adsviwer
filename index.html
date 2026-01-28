@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdPro Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap');
+
+* { box-sizing:border-box; margin:0; padding:0; font-family:'Inter', sans-serif; }
+
+body {
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    padding:15px;
+    color:#2d3748;
+}
+
+.container {
+    background:#ffffff;
+    border-radius:24px;
+    width:100%;
+    max-width:420px;
+    padding:32px 24px;
+    text-align:center;
+    box-shadow:0 20px 40px rgba(0,0,0,0.08);
+    border:1px solid rgba(0,0,0,0.05);
+}
+
+/* Header */
+.header {
+    margin-bottom:30px;
+}
+
+h1 {
+    font-size:32px;
+    font-weight:700;
+    color:#1a202c;
+    margin-bottom:6px;
+}
+
+.subtitle {
+    font-size:17px;
+    color:#718096;
+    font-weight:500;
+}
+
+/* Auto Mode Toggle */
+.auto-toggle {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#f7fafc;
+    padding:14px 20px;
+    border-radius:16px;
+    margin:25px 0;
+    border:1px solid #e2e8f0;
+}
+
+.auto-toggle label {
+    font-size:17px;
+    font-weight:600;
+    color:#2d3748;
+}
+
+/* Toggle Switch */
+.switch {
+    position:relative;
+    display:inline-block;
+    width:56px;
+    height:32px;
+}
+
+.switch input {
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+.slider {
+    position:absolute;
+    cursor:pointer;
+    top:0; left:0; right:0; bottom:0;
+    background:#cbd5e0;
+    transition:0.4s;
+    border-radius:34px;
+}
+
+.slider:before {
+    position:absolute;
+    content:"";
+    height:26px;
+    width:26px;
+    left:4px;
+    bottom:3px;
+    background:white;
+    transition:0.4s;
+    border-radius:50%;
+    box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+    background:#4299e1;
+}
+
+input:checked + .slider:before {
+    transform:translateX(24px);
+}
+
+/* Stats */
+.stats p {
+    font-size:24px;
+    font-weight:600;
+    color:#2d3748;
+    margin:20px 0;
+}
+
+/* Progress Circle */
+.progress-circle {
+    width:160px;
+    height:160px;
+    margin:30px auto;
+    position:relative;
+}
+
+.progress-circle svg {
+    width:160px;
+    height:160px;
+    transform:rotate(-90deg);
+}
+
+.progress-circle circle {
+    cx:80; cy:80; r:72;
+    fill:none;
+    stroke-width:12;
+}
+
+.progress-circle .bg {
+    stroke:#e2e8f0;
+}
+
+.progress-circle .progress {
+    stroke:#4299e1;
+    stroke-linecap:round;
+    stroke-dasharray:452;
+    stroke-dashoffset:452;
+    transition:stroke-dashoffset 1s ease;
+}
+
+.progress-text {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-size:32px;
+    font-weight:700;
+    color:#2d3748;
+}
+
+/* Buttons - Modern Flat Style */
+.buttons button {
+    width:100%;
+    padding:16px;
+    margin:12px 0;
+    border:none;
+    border-radius:16px;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.3s ease;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+}
+
+.buttons button:nth-child(1) {
+    background:#4299e1;
+    color:white;
+}
+
+.buttons button:nth-child(1):hover {
+    background:#3182ce;
+    transform:translateY(-3px);
+}
+
+.buttons button:nth-child(2) {
+    background:#48bb78;
+    color:white;
+}
+
+.buttons button:nth-child(2):hover {
+    background:#38a169;
+    transform:translateY(-3px);
+}
+
+.buttons button:disabled {
+    background:#a0aec0;
+    color:#e2e8f0;
+    transform:none;
+    box-shadow:none;
+    cursor:not-allowed;
+}
+
+/* Footer */
+.footer-credit {
+    font-size:14px;
+    color:#718096;
+    margin-top:30px;
+}
+
+/* Telegram Bubble */
+.telegram-bubble {
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    width:60px;
+    height:60px;
+    background:#4299e1;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 8px 20px rgba(66,153,225,0.4);
+    transition:0.3s;
+    z-index:100;
+}
+.telegram-bubble:hover { transform:scale(1.15); }
+.telegram-bubble img { width:36px; height:36px; }
+
+/* Success Message */
+.success-msg {
+    position:fixed;
+    top:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#48bb78;
+    color:white;
+    padding:14px 32px;
+    border-radius:16px;
+    font-weight:600;
+    font-size:18px;
+    opacity:0;
+    transition:all 0.5s;
+    box-shadow:0 10px 25px rgba(72,187,120,0.3);
+    z-index:200;
+}
+.success-msg.show {
+    opacity:1;
+    transform:translateX(-50%) translateY(10px);
+}
+
+/* Limit Modal */
+.limit-modal {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:300;
+}
+.limit-modal-content {
+    background:white;
+    padding:35px;
+    border-radius:20px;
+    text-align:center;
+    max-width:320px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.2);
+}
+#modal-message {
+    font-size:17px;
+    color:#2d3748;
+    margin-bottom:25px;
+    line-height:1.6;
+}
+#reset-limit-btn {
+    padding:12px 30px;
+    background:#e53e3e;
+    color:white;
+    border:none;
+    border-radius:12px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+#reset-limit-btn:hover {
+    background:#c53030;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>AdPro Tracker</h1>
+        <div class="subtitle">Watch Ads & Track Progress</div>
+    </div>
+
+    <div class="auto-toggle">
+        <label>Auto Ads Mode</label>
+        <label class="switch">
+            <input type="checkbox" id="auto-toggle-switch">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="stats">
+        <p>Watched Ads: <span id="watched-ads">0</span></p>
+    </div>
+
+    <div class="progress-circle">
+        <svg>
+            <circle class="bg" cx="80" cy="80" r="72"></circle>
+            <circle class="progress" cx="80" cy="80" r="72"></circle>
+        </svg>
+        <div class="progress-text" id="ads-progress">0/60</div>
+    </div>
+
+    <div class="buttons">
+        <button id="watch-ad-btn">Watch Ad</button>
+        <button id="reward-ad-btn">Watch Reward Popup</button>
+    </div>
+
+    <div class="footer-credit">Developed By SAKIB HOSSAIN</div>
+</div>
+
+<a href="https://t.me/bestearningmethod" target="_blank" class="telegram-bubble">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram">
+</a>
+
+<div class="success-msg" id="success-msg">Ad Completed!</div>
+
+<!-- Limit Modal -->
+<div class="limit-modal" id="limit-modal">
+    <div class="limit-modal-content">
+        <p id="modal-message"></p>
+        <button id="reset-limit-btn">Reset Count</button>
+    </div>
+</div>
+
+<!-- Monetag SDK -->
+<script src='//libtl.com/sdk.js' data-zone='10406149' data-sdk='show_10406149'></script>
+
+<script>
+let normalAdsCount = parseInt(localStorage.getItem('normalAdsCount')) || 0;
+let rewardAdsCount = parseInt(localStorage.getItem('rewardAdsCount')) || 0;
+let autoAdInterval;
+let monetagLoaded = false;
+
+const AD_LIMIT = 60;
+const CIRCUMFERENCE = 452; // 2 * π * 72
+
+const AD_FUNCTION_NAME = 'show_10406149';
+
+// Initialize
+document.getElementById('watched-ads').textContent = normalAdsCount;
+updateProgressCircle();
+document.getElementById('watch-ad-btn').disabled = true;
+
+function checkSDK(){
+    if(typeof window[AD_FUNCTION_NAME] === 'function'){
+        monetagLoaded = true;
+        document.getElementById('watch-ad-btn').disabled = false;
+    } else setTimeout(checkSDK, 500);
+}
+window.addEventListener('DOMContentLoaded', checkSDK);
+
+function updateProgressCircle(){
+    const progress = normalAdsCount / AD_LIMIT;
+    const offset = CIRCUMFERENCE - (progress * CIRCUMFERENCE);
+    document.querySelector('.progress-circle .progress').style.strokeDashoffset = offset;
+    document.getElementById('ads-progress').textContent = normalAdsCount + '/' + AD_LIMIT;
+}
+
+function showSuccess(msg = 'Ad Completed!'){
+    const successMsg = document.getElementById('success-msg');
+    successMsg.textContent = msg;
+    successMsg.classList.add('show');
+    setTimeout(() => successMsg.classList.remove('show'), 2000);
+}
+
+function checkNormalLimit(){ return normalAdsCount < AD_LIMIT; }
+function checkRewardLimit(){ return rewardAdsCount < AD_LIMIT; }
+
+function showLimitModal(mode){
+    const modal = document.getElementById('limit-modal');
+    const message = document.getElementById('modal-message');
+    const resetBtn = document.getElementById('reset-limit-btn');
+
+    if(mode === 'normal'){
+        message.textContent = "You have reached the 60 ads limit for normal ads.\nPlease watch Reward Popup ads now and change your IP to continue.";
+        resetBtn.onclick = () => {
+            normalAdsCount = 0;
+            localStorage.setItem('normalAdsCount', normalAdsCount);
+            document.getElementById('watched-ads').textContent = normalAdsCount;
+            updateProgressCircle();
+            modal.style.display = 'none';
+        };
+    } else if(mode === 'reward'){
+        message.textContent = "You have reached the 60 ads limit for Reward Popup.\nPlease wait 10 minutes and change your IP to continue.";
+        resetBtn.onclick = () => {
+            rewardAdsCount = 0;
+            localStorage.setItem('rewardAdsCount', rewardAdsCount);
+            modal.style.display = 'none';
+        };
+    }
+    modal.style.display = 'flex';
+}
+
+// Auto Toggle Switch
+const autoSwitch = document.getElementById('auto-toggle-switch');
+
+function startAutoAds(){
+    if(!checkNormalLimit()) { showLimitModal('normal'); return; }
+    autoAdInterval = setInterval(() => {
+        if(normalAdsCount < AD_LIMIT){
+            document.getElementById('watch-ad-btn').click();
+        } else {
+            autoSwitch.checked = false;
+            stopAutoAds();
+            showLimitModal('normal');
+        }
+    }, 5000);
+}
+
+function stopAutoAds(){
+    clearInterval(autoAdInterval);
+}
+
+autoSwitch.addEventListener('change', () => {
+    if(autoSwitch.checked){
+        startAutoAds();
+    } else {
+        stopAutoAds();
+    }
+});
+
+// Normal Watch Ad
+document.getElementById('watch-ad-btn').addEventListener('click', () => {
+    if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
+    if(!checkNormalLimit()){ showLimitModal('normal'); return; }
+
+    window[AD_FUNCTION_NAME]().then(() => {
+        normalAdsCount++;
+        localStorage.setItem('normalAdsCount', normalAdsCount);
+        document.getElementById('watched-ads').textContent = normalAdsCount;
+        updateProgressCircle();
+        showSuccess();
+
+        if(normalAdsCount >= AD_LIMIT){
+            showLimitModal('normal');
+            autoSwitch.checked = false;
+            stopAutoAds();
+        }
+    }).catch(err => { console.error(err); alert('Ad failed!'); });
+});
+
+// Reward Popup Ad
+document.getElementById('reward-ad-btn').addEventListener('click', () => {
+    if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
+    if(!checkRewardLimit()){ showLimitModal('reward'); return; }
+
+    window[AD_FUNCTION_NAME]('pop').then(() => {
+        rewardAdsCount++;
+        localStorage.setItem('rewardAdsCount', rewardAdsCount);
+        showSuccess('Reward Ad Completed!');
+
+        if(rewardAdsCount >= AD_LIMIT){
+            showLimitModal('reward');
+        }
+    }).catch(err => { console.error(err); alert('Reward Ad failed!'); });
+});
+</script>
+
+</body>
+</html>
