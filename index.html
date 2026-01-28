@@ -159,7 +159,7 @@ input:checked + .slider:before {
     color:#2d3748;
 }
 
-/* Buttons - Modern Flat Style */
+/* Buttons */
 .buttons button {
     width:100%;
     padding:16px;
@@ -249,8 +249,8 @@ input:checked + .slider:before {
     transform:translateX(-50%) translateY(10px);
 }
 
-/* Limit Modal */
-.limit-modal {
+/* Modals */
+.limit-modal, .clear-modal {
     position:fixed;
     top:0; left:0;
     width:100%; height:100%;
@@ -260,7 +260,7 @@ input:checked + .slider:before {
     align-items:center;
     z-index:300;
 }
-.limit-modal-content {
+.limit-modal-content, .clear-modal-content {
     background:white;
     padding:35px;
     border-radius:20px;
@@ -268,13 +268,14 @@ input:checked + .slider:before {
     max-width:320px;
     box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
-#modal-message {
+#modal-message, #clear-message {
     font-size:17px;
     color:#2d3748;
     margin-bottom:25px;
     line-height:1.6;
+    white-space:pre-line;
 }
-#reset-limit-btn {
+#reset-limit-btn, #clear-ok-btn {
     padding:12px 30px;
     background:#e53e3e;
     color:white;
@@ -284,8 +285,14 @@ input:checked + .slider:before {
     cursor:pointer;
     transition:0.3s;
 }
-#reset-limit-btn:hover {
+#reset-limit-btn:hover, #clear-ok-btn:hover {
     background:#c53030;
+}
+#clear-ok-btn {
+    background:#4299e1;
+}
+#clear-ok-btn:hover {
+    background:#3182ce;
 }
 </style>
 </head>
@@ -325,7 +332,7 @@ input:checked + .slider:before {
     <div class="footer-credit">Developed By SAKIB HOSSAIN</div>
 </div>
 
-<a href="https://t.me-bestearningmethod" target="_blank" class="telegram-bubble">
+<a href="https://t.me/bestearningmethod" target="_blank" class="telegram-bubble">
     <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram">
 </a>
 
@@ -339,7 +346,15 @@ input:checked + .slider:before {
     </div>
 </div>
 
-<!-- Monetag SDK (Your Zone ID) -->
+<!-- Clear Instruction Modal -->
+<div class="clear-modal" id="clear-modal">
+    <div class="clear-modal-content">
+        <p id="clear-message">You have completed 5 normal ads after reward reset!\n\nTo continue earning more ads:\n\n1. Open Telegram → Settings → Data and Storage → Clear Cache (or Clear Data).\n\n2. Go to Phone Settings → Google → Ads → Reset advertising ID.\n\nAfter doing this, you can watch more ads.</p>
+        <button id="clear-ok-btn">OK</button>
+    </div>
+</div>
+
+<!-- Monetag SDK -->
 <script src='//libtl.com/sdk.js' data-zone='10531747' data-sdk='show_10531747'></script>
 
 <script>
@@ -349,7 +364,7 @@ let autoAdInterval;
 let monetagLoaded = false;
 
 const AD_LIMIT = 60;
-const CIRCUMFERENCE = 452; // 2 * π * 72
+const CIRCUMFERENCE = 452;
 
 const AD_FUNCTION_NAME = 'show_10531747';
 
@@ -362,6 +377,7 @@ function checkSDK(){
     if(typeof window[AD_FUNCTION_NAME] === 'function'){
         monetagLoaded = true;
         document.getElementById('watch-ad-btn').disabled = false;
+        document.getElementById('reward-ad-btn').disabled = false;
     } else setTimeout(checkSDK, 500);
 }
 window.addEventListener('DOMContentLoaded', checkSDK);
@@ -377,7 +393,7 @@ function showSuccess(msg = 'Ad Completed!'){
     const successMsg = document.getElementById('success-msg');
     successMsg.textContent = msg;
     successMsg.classList.add('show');
-    setTimeout(() => successMsg.classList.remove('show'), 2000);
+    setTimeout(() => successMsg.classList.remove('show'), 3000);
 }
 
 function checkNormalLimit(){ return normalAdsCount < AD_LIMIT; }
@@ -396,19 +412,32 @@ function showLimitModal(mode){
             document.getElementById('watched-ads').textContent = normalAdsCount;
             updateProgressCircle();
             modal.style.display = 'none';
+            showSuccess('Normal ads count reset!');
         };
     } else if(mode === 'reward'){
-        message.textContent = "You have reached the 60 ads limit for Reward Popup.\nPlease wait 10 minutes and change your IP to continue.";
-        resetBtn.onclick = () => {
+        message.textContent = "You have reached the 60 ads limit for Reward Popup.\n\nAfter clicking Reset:\n• Watch 5 normal ads using the 'Watch Ad' button.\n• Then follow the instructions shown.\n\nAlso wait 10 minutes and change your IP if possible.";
+        reset Btn.onclick = () => {
             rewardAdsCount = 0;
             localStorage.setItem('rewardAdsCount', rewardAdsCount);
+            localStorage.setItem('afterRewardReset', 'true');
+            localStorage.setItem('normalAfterResetCount', '0');
             modal.style.display = 'none';
+            showSuccess('Reward Popup count reset! Now watch 5 normal ads.');
         };
     }
     modal.style.display = 'flex';
 }
 
-// Auto Toggle Switch
+function showClearModal(){
+    document.getElementById('clear-modal').style.display = 'flex';
+}
+
+// Clear Modal OK
+document.getElementById('clear-ok-btn').addEventListener('click', () => {
+    document.getElementById('clear-modal').style.display = 'none';
+});
+
+// Auto Toggle
 const autoSwitch = document.getElementById('auto-toggle-switch');
 
 function startAutoAds(){
@@ -421,7 +450,7 @@ function startAutoAds(){
             stopAutoAds();
             showLimitModal('normal');
         }
-    }, 5000);
+    }, 6000); // slightly increased interval for better ad loading
 }
 
 function stopAutoAds(){
@@ -436,7 +465,7 @@ autoSwitch.addEventListener('change', () => {
     }
 });
 
-// Normal Watch Ad (Interstitial)
+// Normal Ad (Interstitial)
 document.getElementById('watch-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
     if(!checkNormalLimit()){ showLimitModal('normal'); return; }
@@ -446,14 +475,32 @@ document.getElementById('watch-ad-btn').addEventListener('click', () => {
         localStorage.setItem('normalAdsCount', normalAdsCount);
         document.getElementById('watched-ads').textContent = normalAdsCount;
         updateProgressCircle();
-        showSuccess();
+
+        // Check post-reward reset counting
+        if(localStorage.getItem('afterRewardReset') === 'true'){
+            let postCount = parseInt(localStorage.getItem('normalAfterResetCount') || '0') + 1;
+            localStorage.setItem('normalAfterResetCount', postCount);
+            if(postCount >= 5){
+                showClearModal();
+                localStorage.removeItem('afterRewardReset');
+                localStorage.removeItem('normalAfterResetCount');
+                showSuccess('5 normal ads completed after reset!');
+            } else {
+                showSuccess(`Normal Ad Completed! (${postCount}/5 after reward reset)`);
+            }
+        } else {
+            showSuccess();
+        }
 
         if(normalAdsCount >= AD_LIMIT){
             showLimitModal('normal');
             autoSwitch.checked = false;
             stopAutoAds();
         }
-    }).catch(err => { console.error(err); alert('Ad failed!'); });
+    }).catch(err => { 
+        console.error(err); 
+        alert('Ad failed or closed early! Try again.'); 
+    });
 });
 
 // Reward Popup Ad
@@ -461,15 +508,27 @@ document.getElementById('reward-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
     if(!checkRewardLimit()){ showLimitModal('reward'); return; }
 
+    // Block reward popup if post-reset and less than 5 normal ads watched
+    if(localStorage.getItem('afterRewardReset') === 'true'){
+        let postCount = parseInt(localStorage.getItem('normalAfterResetCount') || '0');
+        if(postCount < 5){
+            alert(`Please watch 5 normal ads first after reward reset!\nCurrent: ${postCount}/5`);
+            return;
+        }
+    }
+
     window[AD_FUNCTION_NAME]('pop').then(() => {
         rewardAdsCount++;
         localStorage.setItem('rewardAdsCount', rewardAdsCount);
-        showSuccess('Reward Ad Completed!');
+        showSuccess('Reward Popup Ad Completed!');
 
         if(rewardAdsCount >= AD_LIMIT){
             showLimitModal('reward');
         }
-    }).catch(err => { console.error(err); alert('Reward Ad failed!'); });
+    }).catch(err => { 
+        console.error(err); 
+        alert('Reward Ad failed or closed early! Try again.'); 
+    });
 });
 </script>
 
