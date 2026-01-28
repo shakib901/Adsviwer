@@ -84,7 +84,7 @@ h1 {
     position:absolute;
     cursor:pointer;
     top:0; left:0; right:0; bottom:0;
-    background:#cbd use #cbd5e0;
+    background:#cbd5e0;
     transition:0.4s;
     border-radius:34px;
 }
@@ -325,8 +325,8 @@ input:checked + .slider:before {
     </div>
 
     <div class="buttons">
-        <button id="watch-ad-btn">Watch Ad</button>
-        <button id="reward-ad-btn">Watch Reward Ad</button>
+        <button id="watch-ad-btn">Watch Ad (Popup)</button>
+        <button id="reward-ad-btn">Watch Reward Ad (Interstitial)</button>
     </div>
 
     <div class="footer-credit">Developed By SAKIB HOSSAIN</div>
@@ -394,7 +394,7 @@ function showSuccess(msg = 'Ad Completed!'){
     const successMsg = document.getElementById('success-msg');
     successMsg.textContent = msg;
     successMsg.classList.add('show');
-    setTimeout(() => successMsg.classList.remove('show'), 3000);
+    setTimeout(() => successMsg.classList.remove('show'), 4000);
 }
 
 function checkNormalLimit(){ return normalAdsCount < AD_LIMIT; }
@@ -406,24 +406,24 @@ function showLimitModal(mode){
     const resetBtn = document.getElementById('reset-limit-btn');
 
     if(mode === 'normal'){
-        message.textContent = "You have reached the 60 ads limit for normal ads.\nPlease watch Reward ads now and change your IP to continue.";
+        message.textContent = "You have reached the 60 ads limit for Popup ads.\nPlease watch Reward Interstitial ads now and change your IP to continue.";
         resetBtn.onclick = () => {
             normalAdsCount = 0;
             localStorage.setItem('normalAdsCount', normalAdsCount);
             document.getElementById('watched-ads').textContent = normalAdsCount;
             updateProgressCircle();
             modal.style.display = 'none';
-            showSuccess('Normal ads count reset!');
+            showSuccess('Popup ads count reset!');
         };
     } else if(mode === 'reward'){
-        message.textContent = "You have reached the 60 ads limit for Reward Ads.\n\nAfter clicking Reset:\n• Watch 5 normal ads using the 'Watch Ad' button.\n• Then follow the instructions shown.\n\nAlso wait 10 minutes and change your IP if possible.";
+        message.textContent = "You have reached the 60 ads limit for Reward Interstitial.\n\nAfter clicking Reset:\n• Watch 5 Popup ads using the 'Watch Ad (Popup)' button.\n• Then follow the instructions shown.\n\nAlso wait 10 minutes and change your IP if possible.";
         resetBtn.onclick = () => {
             rewardAdsCount = 0;
             localStorage.setItem('rewardAdsCount', rewardAdsCount);
             localStorage.setItem('afterRewardReset', 'true');
             localStorage.setItem('normalAfterResetCount', '0');
             modal.style.display = 'none';
-            showSuccess('Reward ads count reset! Now watch 5 normal ads.');
+            showSuccess('Reward Interstitial count reset! Now watch 5 Popup ads.');
         };
     }
     modal.style.display = 'flex';
@@ -433,12 +433,11 @@ function showClearModal(){
     document.getElementById('clear-modal').style.display = 'flex';
 }
 
-// Clear Modal OK
 document.getElementById('clear-ok-btn').addEventListener('click', () => {
     document.getElementById('clear-modal').style.display = 'none';
 });
 
-// Auto Toggle
+// Auto Toggle (for Popup ads)
 const autoSwitch = document.getElementById('auto-toggle-switch');
 
 function startAutoAds(){
@@ -451,7 +450,7 @@ function startAutoAds(){
             stopAutoAds();
             showLimitModal('normal');
         }
-    }, 8000); // Increased interval for stable loading
+    }, 12000); // Longer interval for popup/popunder to load properly
 }
 
 function stopAutoAds(){
@@ -466,18 +465,17 @@ autoSwitch.addEventListener('change', () => {
     }
 });
 
-// Normal Ad (Visible Interstitial)
+// Watch Ad (Popup / Popunder - 'pop' format)
 document.getElementById('watch-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
     if(!checkNormalLimit()){ showLimitModal('normal'); return; }
 
-    window[AD_FUNCTION_NAME]().then(() => {
+    window[AD_FUNCTION_NAME]('pop').then(() => {
         normalAdsCount++;
         localStorage.setItem('normalAdsCount', normalAdsCount);
         document.getElementById('watched-ads').textContent = normalAdsCount;
         updateProgressCircle();
 
-        // Post-reward reset counting
         if(localStorage.getItem('afterRewardReset') === 'true'){
             let postCount = parseInt(localStorage.getItem('normalAfterResetCount') || '0') + 1;
             localStorage.setItem('normalAfterResetCount', postCount);
@@ -485,12 +483,12 @@ document.getElementById('watch-ad-btn').addEventListener('click', () => {
                 showClearModal();
                 localStorage.removeItem('afterRewardReset');
                 localStorage.removeItem('normalAfterResetCount');
-                showSuccess('5 normal ads completed! You can now continue.');
+                showSuccess('5 Popup ads completed! You can now continue.');
             } else {
-                showSuccess(`Normal Ad Completed! (${postCount}/5 after reward reset)`);
+                showSuccess(`Popup Ad Completed! Impression counted (${postCount}/5 after reset)`);
             }
         } else {
-            showSuccess();
+            showSuccess('Popup Ad Completed! Impression counted');
         }
 
         if(normalAdsCount >= AD_LIMIT){
@@ -500,35 +498,34 @@ document.getElementById('watch-ad-btn').addEventListener('click', () => {
         }
     }).catch(err => { 
         console.error(err); 
-        alert('Ad failed or closed early! Please try again.'); 
+        showSuccess('Popup opened but not fully watched! No impression counted. Please view the ad completely.');
     });
 });
 
-// Reward Ad (Now using visible interstitial for reliable display)
+// Watch Reward Ad (Full-screen Interstitial)
 document.getElementById('reward-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
     if(!checkRewardLimit()){ showLimitModal('reward'); return; }
 
-    // Block reward if less than 5 normal ads after reward reset
     if(localStorage.getItem('afterRewardReset') === 'true'){
         let postCount = parseInt(localStorage.getItem('normalAfterResetCount') || '0');
         if(postCount < 5){
-            alert(`Please watch 5 normal ads first after reward reset!\nCurrent: ${postCount}/5`);
+            alert(`Please watch 5 Popup ads first after reward reset!\nCurrent: ${postCount}/5`);
             return;
         }
     }
 
-    window[AD_FUNCTION_NAME]().then(() => {  // Changed to normal interstitial (visible full-screen ad)
+    window[AD_FUNCTION_NAME]().then(() => {
         rewardAdsCount++;
         localStorage.setItem('rewardAdsCount', rewardAdsCount);
-        showSuccess('Reward Ad Completed! (Visible full-screen ad)');
+        showSuccess('Reward Interstitial Completed! Impression counted');
 
         if(rewardAdsCount >= AD_LIMIT){
             showLimitModal('reward');
         }
     }).catch(err => { 
         console.error(err); 
-        alert('Reward Ad failed or closed early! Please try again.'); 
+        showSuccess('Reward Ad not fully watched! No impression counted. Please try again.');
     });
 });
 </script>
