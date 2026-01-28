@@ -159,7 +159,7 @@ input:checked + .slider:before {
     color:#2d3748;
 }
 
-/* Buttons */
+/* Buttons - Modern Flat Style */
 .buttons button {
     width:100%;
     padding:16px;
@@ -249,8 +249,8 @@ input:checked + .slider:before {
     transform:translateX(-50%) translateY(10px);
 }
 
-/* Modals */
-.limit-modal, .clear-modal {
+/* Limit Modal */
+.limit-modal {
     position:fixed;
     top:0; left:0;
     width:100%; height:100%;
@@ -260,7 +260,7 @@ input:checked + .slider:before {
     align-items:center;
     z-index:300;
 }
-.limit-modal-content, .clear-modal-content {
+.limit-modal-content {
     background:white;
     padding:35px;
     border-radius:20px;
@@ -268,14 +268,13 @@ input:checked + .slider:before {
     max-width:320px;
     box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
-#modal-message, #clear-message {
+#modal-message {
     font-size:17px;
     color:#2d3748;
     margin-bottom:25px;
     line-height:1.6;
-    white-space:pre-line;
 }
-#reset-limit-btn, #clear-ok-btn {
+#reset-limit-btn {
     padding:12px 30px;
     background:#e53e3e;
     color:white;
@@ -285,14 +284,8 @@ input:checked + .slider:before {
     cursor:pointer;
     transition:0.3s;
 }
-#reset-limit-btn:hover, #clear-ok-btn:hover {
+#reset-limit-btn:hover {
     background:#c53030;
-}
-#clear-ok-btn {
-    background:#4299e1;
-}
-#clear-ok-btn:hover {
-    background:#3182ce;
 }
 </style>
 </head>
@@ -305,7 +298,7 @@ input:checked + .slider:before {
     </div>
 
     <div class="auto-toggle">
-        <label>Auto Popup Ads Mode</label>
+        <label>Auto Ads Mode</label>
         <label class="switch">
             <input type="checkbox" id="auto-toggle-switch">
             <span class="slider"></span>
@@ -313,7 +306,7 @@ input:checked + .slider:before {
     </div>
 
     <div class="stats">
-        <p>Watched Popup Ads: <span id="watched-ads">0</span></p>
+        <p>Watched Ads: <span id="watched-ads">0</span></p>
     </div>
 
     <div class="progress-circle">
@@ -325,8 +318,8 @@ input:checked + .slider:before {
     </div>
 
     <div class="buttons">
-        <button id="watch-ad-btn">Watch Popup Ad</button>
-        <button id="reward-ad-btn">Watch Reward Interstitial</button>
+        <button id="watch-ad-btn">Watch Ad</button>
+        <button id="reward-ad-btn">Watch Reward Popup</button>
     </div>
 
     <div class="footer-credit">Developed By SAKIB HOSSAIN</div>
@@ -346,112 +339,89 @@ input:checked + .slider:before {
     </div>
 </div>
 
-<!-- Clear Instruction Modal -->
-<div class="clear-modal" id="clear-modal">
-    <div class="clear-modal-content">
-        <p id="clear-message">You have completed 5 Popup ads after Reward reset!\n\nTo continue earning more:\n\n1. Open Telegram → Settings → Data and Storage → Clear Cache (or Clear Data).\n\n2. Go to Phone Settings → Google → Ads → Reset advertising ID.\n\nAfter doing this, you can watch more ads.</p>
-        <button id="clear-ok-btn">OK</button>
-    </div>
-</div>
-
 <!-- Monetag SDK -->
-<script src='//libtl.com/sdk.js' data-zone='10531747' data-sdk='show_10531747'></script>
+<script src='//libtl.com/sdk.js' data-zone='10406149' data-sdk='show_10406149'></script>
 
 <script>
-let popupAdsCount = parseInt(localStorage.getItem('popupAdsCount')) || 0;
+let normalAdsCount = parseInt(localStorage.getItem('normalAdsCount')) || 0;
 let rewardAdsCount = parseInt(localStorage.getItem('rewardAdsCount')) || 0;
 let autoAdInterval;
 let monetagLoaded = false;
 
-const POPUP_LIMIT = 60;
-const REWARD_LIMIT = 5;
-const CIRCUMFERENCE = 452;
+const AD_LIMIT = 60;
+const CIRCUMFERENCE = 452; // 2 * π * 72
 
-const AD_FUNCTION_NAME = 'show_10531747';
+const AD_FUNCTION_NAME = 'show_10406149';
 
 // Initialize
-document.getElementById('watched-ads').textContent = popupAdsCount;
+document.getElementById('watched-ads').textContent = normalAdsCount;
 updateProgressCircle();
 document.getElementById('watch-ad-btn').disabled = true;
-document.getElementById('reward-ad-btn').disabled = true;
 
 function checkSDK(){
     if(typeof window[AD_FUNCTION_NAME] === 'function'){
         monetagLoaded = true;
         document.getElementById('watch-ad-btn').disabled = false;
-        document.getElementById('reward-ad-btn').disabled = false;
     } else setTimeout(checkSDK, 500);
 }
 window.addEventListener('DOMContentLoaded', checkSDK);
 
 function updateProgressCircle(){
-    const progress = popupAdsCount / POPUP_LIMIT;
+    const progress = normalAdsCount / AD_LIMIT;
     const offset = CIRCUMFERENCE - (progress * CIRCUMFERENCE);
     document.querySelector('.progress-circle .progress').style.strokeDashoffset = offset;
-    document.getElementById('ads-progress').textContent = popupAdsCount + '/' + POPUP_LIMIT;
+    document.getElementById('ads-progress').textContent = normalAdsCount + '/' + AD_LIMIT;
 }
 
 function showSuccess(msg = 'Ad Completed!'){
     const successMsg = document.getElementById('success-msg');
     successMsg.textContent = msg;
     successMsg.classList.add('show');
-    setTimeout(() => successMsg.classList.remove('show'), 4000);
+    setTimeout(() => successMsg.classList.remove('show'), 2000);
 }
 
-function checkPopupLimit(){ return popupAdsCount < POPUP_LIMIT; }
-function checkRewardLimit(){ return rewardAdsCount < REWARD_LIMIT; }
+function checkNormalLimit(){ return normalAdsCount < AD_LIMIT; }
+function checkRewardLimit(){ return rewardAdsCount < AD_LIMIT; }
 
 function showLimitModal(mode){
     const modal = document.getElementById('limit-modal');
     const message = document.getElementById('modal-message');
     const resetBtn = document.getElementById('reset-limit-btn');
 
-    if(mode === 'popup'){
-        message.textContent = "You have reached the 60 Popup ads limit.\nPlease watch Reward Interstitial ads and change your IP to continue.";
+    if(mode === 'normal'){
+        message.textContent = "You have reached the 60 ads limit for normal ads.\nPlease watch Reward Popup ads now and change your IP to continue.";
         resetBtn.onclick = () => {
-            popupAdsCount = 0;
-            localStorage.setItem('popupAdsCount', popupAdsCount);
-            document.getElementById('watched-ads').textContent = popupAdsCount;
+            normalAdsCount = 0;
+            localStorage.setItem('normalAdsCount', normalAdsCount);
+            document.getElementById('watched-ads').textContent = normalAdsCount;
             updateProgressCircle();
-           经费 modal.style.display = 'none';
-            showSuccess('Popup ads count reset!');
+            modal.style.display = 'none';
         };
     } else if(mode === 'reward'){
-        message.textContent = "You have reached the 5 Reward Interstitial limit.\n\nAfter Reset:\n• Watch 5 Popup ads first.\n• Then follow the clear instructions.\n\nWait 10 minutes and change IP if possible.";
+        message.textContent = "You have reached the 60 ads limit for Reward Popup.\nPlease wait 10 minutes and change your IP to continue.";
         resetBtn.onclick = () => {
             rewardAdsCount = 0;
             localStorage.setItem('rewardAdsCount', rewardAdsCount);
-            localStorage.setItem('afterRewardReset', 'true');
-            localStorage.setItem('popupAfterResetCount', '0');
             modal.style.display = 'none';
-            showSuccess('Reward count reset! Now watch 5 Popup ads.');
         };
     }
     modal.style.display = 'flex';
 }
 
-function showClearModal(){
-    document.getElementById('clear-modal').style.display = 'flex';
-}
-
-document.getElementById('clear-ok-btn').addEventListener('click', () => {
-    document.getElementById('clear-modal').style.display = 'none';
-});
-
-// Auto Toggle (for Popup ads only)
+// Auto Toggle Switch
 const autoSwitch = document.getElementById('auto-toggle-switch');
 
 function startAutoAds(){
-    if(!checkPopupLimit()) { showLimitModal('popup'); return; }
+    if(!checkNormalLimit()) { showLimitModal('normal'); return; }
     autoAdInterval = setInterval(() => {
-        if(popupAdsCount < POPUP_LIMIT){
+        if(normalAdsCount < AD_LIMIT){
             document.getElementById('watch-ad-btn').click();
         } else {
             autoSwitch.checked = false;
             stopAutoAds();
-            showLimitModal('popup');
+            showLimitModal('normal');
         }
-    }, 12000);
+    }, 5000);
 }
 
 function stopAutoAds(){
@@ -466,68 +436,40 @@ autoSwitch.addEventListener('change', () => {
     }
 });
 
-// Watch Popup Ad ('pop' format)
+// Normal Watch Ad
 document.getElementById('watch-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
-    if(!checkPopupLimit()){ showLimitModal('popup'); return; }
+    if(!checkNormalLimit()){ showLimitModal('normal'); return; }
 
-    window[AD_FUNCTION_NAME]('pop').then(() => {
-        popupAdsCount++;
-        localStorage.setItem('popupAdsCount', popupAdsCount);
-        document.getElementById('watched-ads').textContent = popupAdsCount;
+    window[AD_FUNCTION_NAME]().then(() => {
+        normalAdsCount++;
+        localStorage.setItem('normalAdsCount', normalAdsCount);
+        document.getElementById('watched-ads').textContent = normalAdsCount;
         updateProgressCircle();
+        showSuccess();
 
-        if(localStorage.getItem('afterRewardReset') === 'true'){
-            let postCount = parseInt(localStorage.getItem('popupAfterResetCount') || '0') + 1;
-            localStorage.setItem('popupAfterResetCount', postCount);
-            if(postCount >= 5){
-                showClearModal();
-                localStorage.removeItem('afterRewardReset');
-                localStorage.removeItem('popupAfterResetCount');
-                showSuccess('5 Popup ads completed after reset!');
-            } else {
-                showSuccess(`Popup Ad Completed! (${postCount}/5 after Reward reset)`);
-            }
-        } else {
-            showSuccess('Popup Ad Completed!');
-        }
-
-        if(popupAdsCount >= POPUP_LIMIT){
-            showLimitModal('popup');
+        if(normalAdsCount >= AD_LIMIT){
+            showLimitModal('normal');
             autoSwitch.checked = false;
             stopAutoAds();
         }
-    }).catch(err => { 
-        console.error(err); 
-        showSuccess('Popup opened! View fully for impression.');
-    });
+    }).catch(err => { console.error(err); alert('Ad failed!'); });
 });
 
-// Watch Reward Interstitial (full-screen)
+// Reward Popup Ad
 document.getElementById('reward-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
     if(!checkRewardLimit()){ showLimitModal('reward'); return; }
 
-    if(localStorage.getItem('afterRewardReset') === 'true'){
-        let postCount = parseInt(localStorage.getItem('popupAfterResetCount') || '0');
-        if(postCount < 5){
-            alert(`Watch 5 Popup ads first after Reward reset!\nCurrent: ${postCount}/5`);
-            return;
-        }
-    }
-
-    window[AD_FUNCTION_NAME]().then(() => {
+    window[AD_FUNCTION_NAME]('pop').then(() => {
         rewardAdsCount++;
         localStorage.setItem('rewardAdsCount', rewardAdsCount);
-        showSuccess('Reward Interstitial Completed!');
+        showSuccess('Reward Ad Completed!');
 
-        if(rewardAdsCount >= REWARD_LIMIT){
+        if(rewardAdsCount >= AD_LIMIT){
             showLimitModal('reward');
         }
-    }).catch(err => { 
-        console.error(err); 
-        showSuccess('Reward Ad not fully watched! Try again.');
-    });
+    }).catch(err => { console.error(err); alert('Reward Ad failed!'); });
 });
 </script>
 
