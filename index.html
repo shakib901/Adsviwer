@@ -28,6 +28,8 @@ body {
     text-align:center;
     box-shadow:0 20px 40px rgba(0,0,0,0.08);
     border:1px solid rgba(0,0,0,0.05);
+    position:relative;
+    z-index:10;
 }
 
 /* Header */
@@ -159,7 +161,7 @@ input:checked + .slider:before {
     color:#2d3748;
 }
 
-/* Buttons - Modern Flat Style */
+/* Buttons */
 .buttons button {
     width:100%;
     padding:16px;
@@ -250,7 +252,7 @@ input:checked + .slider:before {
 }
 
 /* Limit Modal */
-.limit-modal {
+.limit-modal, .sms-modal {
     position:fixed;
     top:0; left:0;
     width:100%; height:100%;
@@ -260,7 +262,7 @@ input:checked + .slider:before {
     align-items:center;
     z-index:300;
 }
-.limit-modal-content {
+.limit-modal-content, .sms-modal-content {
     background:white;
     padding:35px;
     border-radius:20px;
@@ -268,15 +270,15 @@ input:checked + .slider:before {
     max-width:320px;
     box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
-#modal-message {
+#modal-message, #sms-message {
     font-size:17px;
     color:#2d3748;
     margin-bottom:25px;
     line-height:1.6;
 }
-#reset-limit-btn {
+#reset-limit-btn, #close-sms-btn {
     padding:12px 30px;
-    background:#e53e3e;
+    background:#4299e1;
     color:white;
     border:none;
     border-radius:12px;
@@ -284,8 +286,8 @@ input:checked + .slider:before {
     cursor:pointer;
     transition:0.3s;
 }
-#reset-limit-btn:hover {
-    background:#c53030;
+#reset-limit-btn:hover, #close-sms-btn:hover {
+    background:#3182ce;
 }
 </style>
 </head>
@@ -319,7 +321,7 @@ input:checked + .slider:before {
 
     <div class="buttons">
         <button id="watch-ad-btn">Watch Ad</button>
-        <button id="reward-ad-btn">Watch Reward Popup</button>
+        <button id="reward-ad-btn">Watch Reward Popup (5 Max)</button>
     </div>
 
     <div class="footer-credit">Developed By SAKIB HOSSAIN</div>
@@ -331,7 +333,7 @@ input:checked + .slider:before {
 
 <div class="success-msg" id="success-msg">Ad Completed!</div>
 
-<!-- Limit Modal -->
+<!-- Normal Limit Modal -->
 <div class="limit-modal" id="limit-modal">
     <div class="limit-modal-content">
         <p id="modal-message"></p>
@@ -339,8 +341,19 @@ input:checked + .slider:before {
     </div>
 </div>
 
-<!-- Monetag SDK -->
+<!-- SMS Reward Popup Modal -->
+<div class="sms-modal" id="sms-modal">
+    <div class="sms-modal-content">
+        <p id="sms-message">Congratulations! You have completed 5 reward ads.<br><br>To claim your reward, please contact the admin on Telegram channel and follow the instructions (SMS/Claim).</p>
+        <button id="close-sms-btn">Close</button>
+    </div>
+</div>
+
+<!-- Monetag Main SDK (Popup/Interstitial) -->
 <script src='//libtl.com/sdk.js' data-zone='10406149' data-sdk='show_10406149'></script>
+
+<!-- Monetag Vignette Banner for Passive Impressions -->
+<script type="text/javascript" src="//www.tltrck.com/vignette.js" data-zone="10406149"></script>
 
 <script>
 let normalAdsCount = parseInt(localStorage.getItem('normalAdsCount')) || 0;
@@ -349,7 +362,8 @@ let autoAdInterval;
 let monetagLoaded = false;
 
 const AD_LIMIT = 60;
-const CIRCUMFERENCE = 452; // 2 * π * 72
+const REWARD_LIMIT = 5;
+const CIRCUMFERENCE = 452;
 
 const AD_FUNCTION_NAME = 'show_10406149';
 
@@ -357,6 +371,9 @@ const AD_FUNCTION_NAME = 'show_10406149';
 document.getElementById('watched-ads').textContent = normalAdsCount;
 updateProgressCircle();
 document.getElementById('watch-ad-btn').disabled = true;
+
+// Update reward button text with count
+document.getElementById('reward-ad-btn').textContent = `Watch Reward Popup (${rewardAdsCount}/${REWARD_LIMIT})`;
 
 function checkSDK(){
     if(typeof window[AD_FUNCTION_NAME] === 'function'){
@@ -381,45 +398,45 @@ function showSuccess(msg = 'Ad Completed!'){
 }
 
 function checkNormalLimit(){ return normalAdsCount < AD_LIMIT; }
-function checkRewardLimit(){ return rewardAdsCount < AD_LIMIT; }
+function checkRewardLimit(){ return rewardAdsCount < REWARD_LIMIT; }
 
-function showLimitModal(mode){
+function showLimitModal(){
     const modal = document.getElementById('limit-modal');
     const message = document.getElementById('modal-message');
     const resetBtn = document.getElementById('reset-limit-btn');
 
-    if(mode === 'normal'){
-        message.textContent = "You have reached the 60 ads limit for normal ads.\nPlease watch Reward Popup ads now and change your IP to continue.";
-        resetBtn.onclick = () => {
-            normalAdsCount = 0;
-            localStorage.setItem('normalAdsCount', normalAdsCount);
-            document.getElementById('watched-ads').textContent = normalAdsCount;
-            updateProgressCircle();
-            modal.style.display = 'none';
-        };
-    } else if(mode === 'reward'){
-        message.textContent = "You have reached the 60 ads limit for Reward Popup.\nPlease wait 10 minutes and change your IP to continue.";
-        resetBtn.onclick = () => {
-            rewardAdsCount = 0;
-            localStorage.setItem('rewardAdsCount', rewardAdsCount);
-            modal.style.display = 'none';
-        };
-    }
+    message.textContent = "You have reached the 60 ads limit for normal ads.\nPlease watch Reward Popup or change your IP to continue.";
+    resetBtn.onclick = () => {
+        normalAdsCount = 0;
+        localStorage.setItem('normalAdsCount', normalAdsCount);
+        document.getElementById('watched-ads').textContent = normalAdsCount;
+        updateProgressCircle();
+        modal.style.display = 'none';
+    };
     modal.style.display = 'flex';
 }
 
-// Auto Toggle Switch
+function showSmsModal(){
+    document.getElementById('sms-modal').style.display = 'flex';
+}
+
+// Close SMS Modal
+document.getElementById('close-sms-btn').addEventListener('click', () => {
+    document.getElementById('sms-modal').style.display = 'none';
+});
+
+// Auto Toggle
 const autoSwitch = document.getElementById('auto-toggle-switch');
 
 function startAutoAds(){
-    if(!checkNormalLimit()) { showLimitModal('normal'); return; }
+    if(!checkNormalLimit()) { showLimitModal(); return; }
     autoAdInterval = setInterval(() => {
         if(normalAdsCount < AD_LIMIT){
             document.getElementById('watch-ad-btn').click();
         } else {
             autoSwitch.checked = false;
             stopAutoAds();
-            showLimitModal('normal');
+            showLimitModal();
         }
     }, 5000);
 }
@@ -439,7 +456,7 @@ autoSwitch.addEventListener('change', () => {
 // Normal Watch Ad
 document.getElementById('watch-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
-    if(!checkNormalLimit()){ showLimitModal('normal'); return; }
+    if(!checkNormalLimit()){ showLimitModal(); return; }
 
     window[AD_FUNCTION_NAME]().then(() => {
         normalAdsCount++;
@@ -449,7 +466,7 @@ document.getElementById('watch-ad-btn').addEventListener('click', () => {
         showSuccess();
 
         if(normalAdsCount >= AD_LIMIT){
-            showLimitModal('normal');
+            showLimitModal();
             autoSwitch.checked = false;
             stopAutoAds();
         }
@@ -459,15 +476,20 @@ document.getElementById('watch-ad-btn').addEventListener('click', () => {
 // Reward Popup Ad
 document.getElementById('reward-ad-btn').addEventListener('click', () => {
     if(!monetagLoaded){ alert('Ad service not loaded yet!'); return; }
-    if(!checkRewardLimit()){ showLimitModal('reward'); return; }
+    if(!checkRewardLimit()){ 
+        showSmsModal();
+        return; 
+    }
 
     window[AD_FUNCTION_NAME]('pop').then(() => {
         rewardAdsCount++;
         localStorage.setItem('rewardAdsCount', rewardAdsCount);
+        document.getElementById('reward-ad-btn').textContent = `Watch Reward Popup (${rewardAdsCount}/${REWARD_LIMIT})`;
         showSuccess('Reward Ad Completed!');
 
-        if(rewardAdsCount >= AD_LIMIT){
-            showLimitModal('reward');
+        if(rewardAdsCount >= REWARD_LIMIT){
+            showSmsModal();
+            document.getElementById('reward-ad-btn').disabled = true;
         }
     }).catch(err => { console.error(err); alert('Reward Ad failed!'); });
 });
